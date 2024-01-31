@@ -1,0 +1,15 @@
+package com.strabag.app.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
+
+import com.strabag.app.entity.SectionAndClass;
+
+@Repository
+public interface SectionAndClassRepository extends JpaRepository<SectionAndClass, Integer> {
+
+	@Query(value = "SELECT * FROM tutorials", nativeQuery = true)
+	List<SectionAndClass> findbyJobId();
+	
+}

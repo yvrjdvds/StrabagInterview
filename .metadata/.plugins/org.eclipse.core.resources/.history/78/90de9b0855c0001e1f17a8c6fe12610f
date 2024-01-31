@@ -1,0 +1,50 @@
+package com.strabag.app.controller;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.List;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.strabag.app.service.FileParseService;
+import com.strabag.app.controller.response.ResultResponse;
+import com.strabag.app.entity.JobDetails;
+
+public class ParseFileController {
+
+	Logger logger = LogManager.getLogger(ParseFileController.class);
+	
+	@Autowired
+	FileParseService fileParseService;
+	
+	@Autowired	
+	JobDetails jobDetails;
+	
+	@Autowired
+	ResultResponse resultResponse;
+	
+
+	public ResultResponse parseFile(String fileDirectory) throws FileNotFoundException, IOException {
+
+		List<String> validFileList = fileParseService.isFileValid(fileDirectory);
+		;
+		for (String validfile : validFileList) {
+
+			logger.debug("create job id");
+
+			jobDetails = fileParseService.createJobID(validfile);
+
+			logger.debug("created job id: " + jobDetails.getJobID());
+
+			fileParseService.parseAndSave(validfile, jobDetails);
+
+			resultResponse.setJobID(jobDetails.getJobID());
+			resultResponse.setJobCompletedDate(jobDetails.getJobCompletedDate());
+			resultResponse.setStatus(jobDetails.getJobStatus());
+			logger.info("Job completed");
+		}
+		return resultResponse;
+	}
+
+}

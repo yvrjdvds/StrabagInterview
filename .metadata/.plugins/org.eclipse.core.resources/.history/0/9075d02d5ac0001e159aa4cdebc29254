@@ -1,0 +1,27 @@
+package com.strabag.app;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.ComponentScan;
+
+import com.strabag.app.controller.ParseFileController;
+
+@SpringBootApplication
+@ComponentScan("com.strabag.app")
+public class ParseCsvAndExcelFileToDatabaseApplication {
+
+	@Autowired
+	ParseFileController parseFileController;
+
+	public static void main(String[] args) {
+		SpringApplication.run(ParseCsvAndExcelFileToDatabaseApplication.class, args);
+		
+		
+		String file = "F:\\Java\\JavaSpringSuite\\RestAPI";
+		parseFileControlle
+		
+		
+	}
+
+}

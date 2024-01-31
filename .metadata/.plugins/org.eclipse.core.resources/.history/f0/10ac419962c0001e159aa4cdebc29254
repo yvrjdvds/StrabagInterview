@@ -1,0 +1,42 @@
+package com.strabag.app;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+
+import com.strabag.app.controller.ParseFileController;
+
+@SpringBootApplication
+@ComponentScan("com.strabag.app")
+@EnableJpaRepositories("com.strabag.app.repository")
+@EntityScan("com.strabag.app.entity")
+public class ParseCsvAndExcelFileToDatabaseApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(ParseCsvAndExcelFileToDatabaseApplication.class, args);
+		String file = "F:\\Java\\JavaSpringSuite\\RestAPI";
+
+		ConfigurableApplicationContext applicationContext = SpringApplication
+				.run(ParseCsvAndExcelFileToDatabaseApplication.class, args);
+		ParseFileController parseFileController = applicationContext.getBean(ParseFileController.class);
+
+		try {
+			parseFileController.parseFile(file);
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	}
+
+}

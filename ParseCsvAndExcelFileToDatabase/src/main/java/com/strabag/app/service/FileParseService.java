@@ -1,0 +1,137 @@
+package com.strabag.app.service;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.net.FileNameMap;
+import java.net.URLConnection;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.strabag.app.controller.response.ResultResponse;
+import com.strabag.app.entity.SectionAndClass;
+import com.strabag.app.entity.JobDetails;
+import com.strabag.app.entity.JobDetails.Status;
+import com.strabag.app.repository.JobDetailsRepository;
+import com.strabag.app.repository.SectionAndClassRepository;
+
+@Service
+public class FileParseService {
+
+	Logger logger = LogManager.getLogger(FileParseService.class);
+
+	@Autowired
+	JobDetailsRepository jobDetailsRepository;
+
+	@Autowired
+	SectionAndClassRepository sectionAndClassRepository;
+
+	public List<String> isFileValid(String fileDirectory) {
+		File filecheck = new File(fileDirectory);
+		System.out.println("Service class, filecheck " + filecheck);
+
+		File filesList[] = filecheck.listFiles();
+		System.out.println("Service class, filesList " + filesList);
+
+		List<String> validFilesList = new ArrayList<String>();
+		for (File file : filesList) {
+			System.out.println("Service class, file " + file);
+
+			FileNameMap fileNameMap = URLConnection.getFileNameMap();
+			String mimeType = fileNameMap.getContentTypeFor(file.getName());
+			String csvType = "text/csv";
+			if (csvType.equals(mimeType)) {
+				System.out.println("Service class, file " + file.getPath() + "" + file.getName());
+
+				validFilesList.add(file.getPath());
+			} else if (file.getName().toString().endsWith(".xslx")) {
+				validFilesList.add(file.getPath());
+			}
+		}
+
+		return validFilesList;
+	}
+
+	public JobDetails createJobID(String validfile) {
+		JobDetails jobDetails = new JobDetails();
+		jobDetails.setFileName(validfile);
+		jobDetails.setJobStatus(Status.START);
+		jobDetails.setJobStartDate(new Date());
+		jobDetailsRepository.save(jobDetails);
+		return jobDetails;
+	}
+
+	public FileParseService() {
+		super();
+	}
+
+	private List<SectionAndClass> parseCsvToEntity(String file, JobDetails jobDetails)
+			throws FileNotFoundException, IOException {
+		String line = null;
+		String csvSplitBy = "\\|";
+		boolean firstLine = true;
+
+		List<SectionAndClass> sectionAndClassesList = new ArrayList<SectionAndClass>();
+		;
+		try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+			while ((line = br.readLine()) != null) {
+
+				if (firstLine) {
+					firstLine = false;
+					continue;
+				} else {
+
+					String[] data = line.split(csvSplitBy);
+
+					SectionAndClass sectionAndClass = new SectionAndClass();
+					sectionAndClass.setJobID(jobDetails.getJobID());
+					sectionAndClass.setSectionName(data[0]);
+					sectionAndClass.setClassName(data[1]);
+					sectionAndClass.setClassCode(data[2]);
+					sectionAndClassesList.add(sectionAndClass);
+
+					for (int i = 3; i < data.length; i += 2) {
+						sectionAndClass.setJobID(jobDetails.getJobID());
+						sectionAndClass.setSectionName(data[0]);
+						sectionAndClass.setClassName(data[i]);
+						sectionAndClass.setClassCode(data[i + 1]);
+						sectionAndClassesList.add(sectionAndClass);
+
+					}
+				}
+			}
+			logger.debug("CSV file Parsing completed");
+
+		}
+		return sectionAndClassesList;
+	}
+
+	public ResultResponse parseAndSave(String validfile) throws FileNotFoundException, IOException {
+		JobDetails jobDetails = createJobID(validfile);
+
+		logger.debug("created job id for file: " + validfile);
+
+		List<SectionAndClass> sectionAndClass = parseCsvToEntity(validfile, jobDetails);
+		sectionAndClassRepository.saveAll(sectionAndClass);
+		jobDetails.setJobStatus(Status.COMPLETED);
+		jobDetails.setJobCompletedDate(new Date());
+		jobDetailsRepository.save(jobDetails);
+
+		ResultResponse resultResponse = new ResultResponse();
+
+		resultResponse.setJobID(jobDetails.getJobID());
+		resultResponse.setJobCompletedDate(jobDetails.getJobCompletedDate());
+		resultResponse.setStatus(jobDetails.getJobStatus());
+		logger.info("Job completed");
+		return resultResponse;
+	}
+
+}

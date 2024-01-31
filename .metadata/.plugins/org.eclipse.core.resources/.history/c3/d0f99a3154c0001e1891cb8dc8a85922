@@ -1,0 +1,9 @@
+package com.strabag.app.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.strabag.app.entity.SectionAndClass;
+
+public interface SectionAndClassRepository extends JpaRepository<SectionAndClass, Integer> {
+
+}
